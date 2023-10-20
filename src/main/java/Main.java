@@ -1,10 +1,23 @@
+import java.io.BufferedOutputStream;
 
 public class Main {
-    public static final int PORT = 8090;
-    public static final int Threads = 64;
+    private static final int SERVER_SOCKET = 9999;
+    private static final int POOLS = 64;
+    public static void main(String[] args){
+        final var server = new Server(SERVER_SOCKET, POOLS);
 
-    public static void main(String[] args) {
-        Server server = new Server(PORT, Threads);
-        server.start();
+        // добавление хендлеров (обработчиков)
+        server.addHandler("GET", "/messages", new Handler() {
+            public void handle(Request request, BufferedOutputStream responseStream) {
+                // TODO: handlers code
+            }
+        });
+        server.addHandler("POST", "/messages", new Handler() {
+            public void handle(Request request, BufferedOutputStream responseStream) {
+                // TODO: handlers code
+            }
+        });
+
+        server.start(SERVER_SOCKET);
     }
 }
