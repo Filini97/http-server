@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -17,9 +16,6 @@ import java.util.concurrent.Executors;
 public class Server {
     int port;
     ExecutorService executorService;
-    //final List<String> validPaths = List.of("/index.html", "/spring.svg", "/spring.png", "/resources.html",
-    //        "/styles.css", "/app.js", "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js");
-
     private final Map<String, Map<String, Handler>> handlers;
 
     public Server(int port, int threads) {
