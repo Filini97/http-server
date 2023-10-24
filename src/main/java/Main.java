@@ -1,9 +1,4 @@
 import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 public class Main {
     private static final int SERVER_SOCKET = 9999;
