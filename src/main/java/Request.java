@@ -9,8 +9,7 @@ public class Request {
     private final static String GET = "GET";
     private final static String POST = "POST";
 
-    private Request(String method, String path, List<String> headers,
-                    Map<String, List<String>> queryParams, Map<String, List<String>> postParams, InputStream in) {
+    private Request(String method, String path, List<String> headers, Map<String, List<String>> queryParams) {
         this.method = method;
         this.path = path;
         this.headers = headers;
@@ -46,24 +45,20 @@ public class Request {
             badRequest(outputStream);
             return null;
         }
+        System.out.println(method);
 
         final var pathWithQuery = requestLine[1];
         if (!pathWithQuery.startsWith("/")) {
             badRequest(outputStream);
             return null;
         }
-        final String path;
-        final Map<String, List<String>> query;
 
-        if (pathWithQuery.contains("?")) {
-            String[] value = pathWithQuery.split("\\?");
-            path = value[0];
-            String queryLine = value[1];
-            query = parseToQuery(queryLine);
-        } else {
-            path = pathWithQuery;
-            query = null;
+        final var path = requestLine[1];
+        if (!path.startsWith("/")) {
+            badRequest(outputStream);
+            return null;
         }
+        System.out.println(path);
 
         // ищем заголовки
         final var headersDelimiter = new byte[]{'\r', '\n', '\r', '\n'};
@@ -83,12 +78,10 @@ public class Request {
         final var headers = Arrays.asList(new String(headersBytes).split("\r\n"));
         System.out.println(headers);
 
-        Map<String, List<String>> post = null;
 
         // для GET тела нет
         if (!method.equals(GET)) {
             in.skip(headersDelimiter.length);
-
             // вычитываем Content-Length, чтобы прочитать body
             final var contentLength = extractHeader(headers, "Content-Length");
             if (contentLength.isPresent()) {
@@ -97,18 +90,20 @@ public class Request {
 
                 final var body = new String(bodyBytes);
                 System.out.println(body);
-
-                if (body.contains("=")) {
-                    post = parseToQuery(body);
-                }
             }
         }
-        return new Request(method, path, headers, query, post, in);
-    }
 
-    private static Map<String, List<String>> parseToQuery(String queryLine) {
-        //HashMap<String, List<String>> map = new HashMap<>();
+        outputStream.write((
+                "HTTP/1.1 200 OK\r\n" +
+                        "Content-Length: 0\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n"
+        ).getBytes());
+        outputStream.flush();
 
+
+
+        return new Request(method, path, headers, (Map<String, List<String>>) headers);
     }
 
     public List<String> getQueryParam(String name) {
