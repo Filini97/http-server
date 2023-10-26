@@ -32,10 +32,8 @@ public class Server {
     }
 
     public void addHandler(String method, String path, Handler handler) {
-        if (handlers.get(method) == null) {
-            handlers.put(method, new ConcurrentHashMap<>());
-        }
-        handlers.get(method).put(path, handler);
+        handlers.computeIfAbsent(method, k -> new ConcurrentHashMap<>())
+                .put(path, handler);
     }
 
     public void connect(Socket socket) {
@@ -45,6 +43,8 @@ public class Server {
 
             var request = Request.getRequest(in,out);
             var handlerPath = handlers.get(request.getMethod());
+
+
             if (handlerPath == null) {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +

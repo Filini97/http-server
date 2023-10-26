@@ -1,15 +1,24 @@
-import java.io.*;
-import java.util.*;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 public class Request {
     private final String method;
-    private final String path;
+    private static String path;
     private final List<String> headers;
-    private final Map<String, List<String>> queryParams;
+    private static List<NameValuePair> queryParams;
     private final static String GET = "GET";
     private final static String POST = "POST";
 
-    private Request(String method, String path, List<String> headers, Map<String, List<String>> queryParams) {
+    private Request(String method, String path, List<String> headers, List<NameValuePair> queryParams) {
         this.method = method;
         this.path = path;
         this.headers = headers;
@@ -47,12 +56,6 @@ public class Request {
         }
         System.out.println(method);
 
-        final var pathWithQuery = requestLine[1];
-        if (!pathWithQuery.startsWith("/")) {
-            badRequest(outputStream);
-            return null;
-        }
-
         final var path = requestLine[1];
         if (!path.startsWith("/")) {
             badRequest(outputStream);
@@ -73,6 +76,7 @@ public class Request {
         in.reset();
         // пропускаем requestLine
         in.skip(headersStart);
+
 
         final var headersBytes = in.readNBytes(headersEnd - headersStart);
         final var headers = Arrays.asList(new String(headersBytes).split("\r\n"));
@@ -101,17 +105,35 @@ public class Request {
         ).getBytes());
         outputStream.flush();
 
+        String queryString = extractQueryString(requestLine[1]);
+        List<NameValuePair> queryParams = URLEncodedUtils.parse(queryString, StandardCharsets.UTF_8);
 
-
-        return new Request(method, path, headers, (Map<String, List<String>>) headers);
+        return new Request(method, path, headers, queryParams);
     }
 
-    public List<String> getQueryParam(String name) {
-        return queryParams.get(name);
+    public void setQueryParams() {
+        String queryString = extractQueryString(path);
+        queryParams = URLEncodedUtils.parse(queryString, StandardCharsets.UTF_8);
     }
-
-    public Map<String, List<String>> getQueryParams() {
+    public static List<NameValuePair> getQueryParams() {
         return queryParams;
+    }
+    public String getQueryParam(String paramName) {
+        for (NameValuePair param : queryParams) {
+            if (param.getName().equals(paramName)) {
+                return param.getValue();
+            }
+        }
+        return null;
+    }
+
+    // извлечение строки запроса
+    private static String extractQueryString(String requestLine) {
+        int questionMarkIndex = requestLine.indexOf("?");
+        if (questionMarkIndex >= 0) {
+            return requestLine.substring(questionMarkIndex + 1);
+        }
+        return "";
     }
 
     public String getMethod() {
@@ -145,7 +167,7 @@ public class Request {
                 .findFirst();
     }
 
-    // from google guava with modifications
+    // from Google guava with modifications
     private static int indexOf(byte[] array, byte[] target, int start, int max) {
         outer:
         for (int i = start; i < max - target.length + 1; i++) {
@@ -158,6 +180,5 @@ public class Request {
         }
         return -1;
     }
-
 
 }
