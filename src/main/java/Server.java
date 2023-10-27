@@ -2,6 +2,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +42,7 @@ public class Server {
              final var in = socket.getInputStream();
              final var out = new BufferedOutputStream(socket.getOutputStream());) {
 
-            var request = Request.getRequest(in,out);
+            Request request = Request.getRequest(in,out);
             var handlerPath = handlers.get(request.getMethod());
 
 
@@ -69,6 +70,19 @@ public class Server {
             handler.handle(request, out);
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void test(Request request) {
+        System.out.println();
+        System.out.println("=======================");
+        System.out.println("METHOD: " + request.getMethod());
+        System.out.println("PATH: " + request.getPath());
+        System.out.println("HEADERS: " + request.getHeaders());
+        System.out.println("Query Params: ");
+        for (var para : request.getQueryParams()) {
+            System.out.println(para.getName() + " = " + para.getValue());
         }
     }
 }

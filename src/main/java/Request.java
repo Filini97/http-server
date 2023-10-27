@@ -5,6 +5,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
@@ -12,20 +13,20 @@ import java.util.Optional;
 
 public class Request {
     private final String method;
-    private static String path;
+    private final String path;
     private final List<String> headers;
-    private static List<NameValuePair> queryParams;
-    private final static String GET = "GET";
-    private final static String POST = "POST";
+    private final List<NameValuePair> queryParams;
+    private static final String GET = "GET";
+    private static final String POST = "POST";
 
-    private Request(String method, String path, List<String> headers, List<NameValuePair> queryParams) {
+    public Request(String method, String path, List<String> headers, List<NameValuePair> queryParams) {
         this.method = method;
         this.path = path;
         this.headers = headers;
         this.queryParams = queryParams;
     }
 
-    public static Request getRequest(InputStream inputStream, BufferedOutputStream outputStream) throws IOException {
+     public static Request getRequest(InputStream inputStream, BufferedOutputStream outputStream) throws IOException, URISyntaxException {
         final var methods = List.of(GET, POST);
         final var limit = 4096;
         final var in = new BufferedInputStream(inputStream);
@@ -97,27 +98,17 @@ public class Request {
             }
         }
 
-        outputStream.write((
-                "HTTP/1.1 200 OK\r\n" +
-                        "Content-Length: 0\r\n" +
-                        "Connection: close\r\n" +
-                        "\r\n"
-        ).getBytes());
-        outputStream.flush();
-
         String queryString = extractQueryString(requestLine[1]);
-        List<NameValuePair> queryParams = URLEncodedUtils.parse(queryString, StandardCharsets.UTF_8);
+         List<NameValuePair> queryParams = URLEncodedUtils.parse(queryString, StandardCharsets.UTF_8);
+
 
         return new Request(method, path, headers, queryParams);
     }
 
-    public void setQueryParams() {
-        String queryString = extractQueryString(path);
-        queryParams = URLEncodedUtils.parse(queryString, StandardCharsets.UTF_8);
-    }
-    public static List<NameValuePair> getQueryParams() {
+    public List<NameValuePair> getQueryParams() {
         return queryParams;
     }
+
     public String getQueryParam(String paramName) {
         for (NameValuePair param : queryParams) {
             if (param.getName().equals(paramName)) {
@@ -180,5 +171,4 @@ public class Request {
         }
         return -1;
     }
-
 }
