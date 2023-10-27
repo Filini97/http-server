@@ -42,7 +42,7 @@ public class Server {
              final var in = socket.getInputStream();
              final var out = new BufferedOutputStream(socket.getOutputStream());) {
 
-            Request request = Request.getRequest(in,out);
+            Request request = Request.getRequest(in, out);
             var handlerPath = handlers.get(request.getMethod());
 
 
@@ -56,6 +56,7 @@ public class Server {
                 out.flush();
                 return;
             }
+
             var handler = handlerPath.get(request.getPath());
             if (handler == null) {
                 out.write((
@@ -72,17 +73,6 @@ public class Server {
             e.printStackTrace();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
-        }
-    }
-    public void test(Request request) {
-        System.out.println();
-        System.out.println("=======================");
-        System.out.println("METHOD: " + request.getMethod());
-        System.out.println("PATH: " + request.getPath());
-        System.out.println("HEADERS: " + request.getHeaders());
-        System.out.println("Query Params: ");
-        for (var para : request.getQueryParams()) {
-            System.out.println(para.getName() + " = " + para.getValue());
         }
     }
 }

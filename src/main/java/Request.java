@@ -10,17 +10,19 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class Request {
     private final String method;
     private final String path;
     private final List<String> headers;
-    private final List<NameValuePair> queryParams;
+    private static Map<String, String> queryParams;
+    // private final List<NameValuePair> queryParams;
     private static final String GET = "GET";
     private static final String POST = "POST";
 
-    public Request(String method, String path, List<String> headers, List<NameValuePair> queryParams) {
+    public Request(String method, String path, List<String> headers, Map<String, String> queryParams) {
         this.method = method;
         this.path = path;
         this.headers = headers;
@@ -56,12 +58,16 @@ public class Request {
             badRequest(outputStream);
             return null;
         }
+         System.out.println("Метод - " + method);
 
-        final var path = requestLine[1];
+        URI uri = URI.create(requestLine[1]);
+
+        final var path = uri.getPath();
         if (!path.startsWith("/")) {
             badRequest(outputStream);
             return null;
         }
+         System.out.println("Путь - " + path);
 
         // ищем заголовки
         final var headersDelimiter = new byte[]{'\r', '\n', '\r', '\n'};
@@ -94,23 +100,21 @@ public class Request {
             }
         }
 
-         List<NameValuePair> queryParams = URLEncodedUtils.parse(URI.create(requestLine[1]), StandardCharsets.UTF_8);
-
+         List<NameValuePair> queryParList = URLEncodedUtils.parse(uri, StandardCharsets.UTF_8);
+         for (int i = 0; i < queryParList.size(); i++) {
+             NameValuePair param = queryParList.get(i);
+             queryParams.put(param.getName(), param.getValue());
+         }
         return new Request(method, path, headers, queryParams);
     }
 
-    public List<NameValuePair> getQueryParams() {
+    public Map<String, String> getQueryParams() {
         return queryParams;
     }
 
     public String getQueryParam(String paramName) {
-        for (NameValuePair param : queryParams) {
-            if (param.getName().equals(paramName)) {
-                return param.getValue();
-            }
+        return queryParams.get(paramName);
         }
-        return null;
-    }
 
     public String getMethod() {
         return method;
