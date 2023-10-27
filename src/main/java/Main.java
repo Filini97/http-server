@@ -31,9 +31,6 @@ public class Main {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
-            server.test(request);
-
         });
 
         server.addHandler("GET", "/events.html", (request, responseStream) -> {
@@ -53,7 +50,6 @@ public class Main {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            server.test(request);
         });
 
         server.addHandler("POST", "/", (request, responseStream) -> {
@@ -67,7 +63,6 @@ public class Main {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            server.test(request);
         });
     }
 }

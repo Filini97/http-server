@@ -5,6 +5,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -55,14 +56,12 @@ public class Request {
             badRequest(outputStream);
             return null;
         }
-        System.out.println(method);
 
         final var path = requestLine[1];
         if (!path.startsWith("/")) {
             badRequest(outputStream);
             return null;
         }
-        System.out.println(path);
 
         // ищем заголовки
         final var headersDelimiter = new byte[]{'\r', '\n', '\r', '\n'};
@@ -78,11 +77,8 @@ public class Request {
         // пропускаем requestLine
         in.skip(headersStart);
 
-
         final var headersBytes = in.readNBytes(headersEnd - headersStart);
         final var headers = Arrays.asList(new String(headersBytes).split("\r\n"));
-        System.out.println(headers);
-
 
         // для GET тела нет
         if (!method.equals(GET)) {
@@ -98,9 +94,7 @@ public class Request {
             }
         }
 
-        String queryString = extractQueryString(requestLine[1]);
-         List<NameValuePair> queryParams = URLEncodedUtils.parse(queryString, StandardCharsets.UTF_8);
-
+         List<NameValuePair> queryParams = URLEncodedUtils.parse(URI.create(requestLine[1]), StandardCharsets.UTF_8);
 
         return new Request(method, path, headers, queryParams);
     }
@@ -116,15 +110,6 @@ public class Request {
             }
         }
         return null;
-    }
-
-    // извлечение строки запроса
-    private static String extractQueryString(String requestLine) {
-        int questionMarkIndex = requestLine.indexOf("?");
-        if (questionMarkIndex >= 0) {
-            return requestLine.substring(questionMarkIndex + 1);
-        }
-        return "";
     }
 
     public String getMethod() {
